@@ -23,7 +23,7 @@ class UserController {
     const userExists = await User.findOne({ email: req.body.email });
 
     if (userExists) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(403).json({ error: 'User already exists' });
     }
 
     const { _id, name, email } = await User.create(req.body);
@@ -39,7 +39,7 @@ class UserController {
     const schema = Yup.object().shape({
       name: Yup.string().min(5),
       email: Yup.string().email(),
-      oldPassword: Yup.string().min(6),
+      oldPassword: Yup.string(),
       password: Yup.string()
         .min(6)
         .when('oldPassword', (oldPassword, field) =>
@@ -61,11 +61,11 @@ class UserController {
     const user = await User.findById(req.userId);
 
     if (email !== user.email) {
-      const userExists = await User.rfindOne({ email });
+      const userExists = await User.findOne({ email });
 
       if (userExists) {
         return res
-          .status(400)
+          .status(403)
           .json({ error: 'User with this email already exists' });
       }
     }
@@ -76,9 +76,9 @@ class UserController {
 
     const userObj = {
       ...req.body,
-      password: req.body.password
-        ? await user.generateHashPassword(req.body.password)
-        : undefined,
+      ...(req.body.password
+        ? { password: await user.generateHashPassword(req.body.password) }
+        : {}),
     };
 
     await user.update(userObj);

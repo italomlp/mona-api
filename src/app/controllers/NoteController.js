@@ -49,11 +49,17 @@ class NoteController {
       return res.status(403).json({ error: "User hasn't permission for this" });
     }
 
-    await note.update({ content });
+    const { updatedAt, createdAt } = await Note.findOneAndUpdate(
+      { _id },
+      { content },
+      { new: true }
+    );
 
     return res.json({
       _id,
       content,
+      updatedAt,
+      createdAt,
     });
   }
 
